@@ -20,15 +20,19 @@ if [ "$1" = "import" ]; then
     sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;"
     sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;"
 
-    # Download Luxembourg as sample if no data is provided
-    if [ ! -f /data.osm.pbf ]; then
-        echo "WARNING: No import file at /data.osm.pbf, so importing Luxembourg as example..."
-        wget -nv http://download.geofabrik.de/europe/luxembourg-latest.osm.pbf -O /data.osm.pbf
-    fi
+    sudo -u postgres createdb -E UTF8 -O renderer india_boundaries
+    sudo -u postgres psql -d india_boundaries -c "CREATE EXTENSION postgis;"
+    sudo -u postgres psql -d india_boundaries -c "ALTER TABLE geometry_columns OWNER TO renderer;"
+
+    wget -nv http://download.geofabrik.de/asia/india-latest.osm.pbf -O /india-latest.osm.pbf
+    wget -nv http://download.geofabrik.de/asia/pakistan-latest.osm.pbf -O /pakistan-latest.osm.pbf
+    wget -nv http://download.geofabrik.de/asia/china-latest.osm.pbf -O /china-latest.osm.pbf
 
     # Import data
-    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 2048 --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
-
+    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 2048 --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /india-latest.osm.pbf
+    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 2048 --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /pakistan-latest.osm.pbf
+    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua -C 2048 --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /china-latest.osm.pbf
+    sudo -u renderer osm2pgsql -d india_boundaries -cGs /india-claim-boundaries.osm.xml
     exit 0
 fi
 

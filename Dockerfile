@@ -90,6 +90,9 @@ USER root
 RUN apt-get install -y postgresql postgresql-contrib postgis postgresql-10-postgis-2.4
 USER renderer
 
+#Copy India Boundary file
+COPY india-claim-boundaries.osm.xml /india-claim-boundaries.osm.xml
+
 # Start running
 USER root
 RUN apt-get install -y sudo
